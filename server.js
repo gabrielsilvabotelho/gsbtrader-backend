@@ -1,50 +1,35 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const cors = require("cors");
 
 const app = express();
+
+// LIBERA TUDO (CORS)
 app.use(cors());
 app.use(express.json());
 
-const SECRET = "GSBTRADER_SECRET";
-
-let users = [
-  { id: 1, username: "admin", password: "123456", role: "admin" }
-];
-
-let sinais = [];
-
+// LOGIN
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  const user = users.find(u => u.username === username && u.password === password);
 
-  if (!user) return res.status(401).send("Login inválido");
-
-  const token = jwt.sign({ id: user.id, role: user.role }, SECRET);
-  res.json({ token });
-});
-
-function auth(req, res, next) {
-  const token = req.headers.authorization;
-  if (!token) return res.sendStatus(403);
-
-  try {
-    req.user = jwt.verify(token, SECRET);
-    next();
-  } catch {
-    res.sendStatus(403);
+  if (username === "admin" && password === "123456") {
+    return res.json({ token: "123" });
   }
-}
 
-app.post("/webhook", (req, res) => {
-  sinais.push(req.body);
-  res.send("ok");
+  return res.status(401).json({ error: "Login inválido" });
 });
 
-app.get("/sinais", auth, (req, res) => {
+// SINAIS (SEM BLOQUEIO)
+app.get("/sinais", (req, res) => {
+  const sinais = [
+    { par: "EUR/USD", sinal: "COMPRA" },
+    { par: "GBP/USD", sinal: "VENDA" },
+    { par: "USD/JPY", sinal: "COMPRA" }
+  ];
+
   res.json(sinais);
 });
 
+// PORTA CORRETA (IMPORTANTE)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
